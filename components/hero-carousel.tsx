@@ -16,7 +16,7 @@ const slides = [
     subtitle: "Limited Edition",
   },
   {
-    image: "https://tse1.mm.bing.net/th/id/OIP.d2m_GyjLUfGvTshAaaWowQHaHa?pid=Api&P=0&h=180",
+    image: "https://cdn.shopify.com/s/files/1/0752/6435/files/LAURELLIGHTTURQ-CC1380_900x.webp?v=1743582326",
     title: "Fashion elivates you ",
     subtitle: "Your Statement",
   },
