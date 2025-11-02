@@ -5,18 +5,18 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 
 const slides = [
   {
-    image: "/model-in-desert-wearing-black-hoodie-luxury-street.jpg",
+    image: "https://img.freepik.com/premium-photo/hoodies-different-colors-hang-hanger_694697-83.jpg",
     title: "Premium Hoodies",
     subtitle: "Experience Luxury Comfort",
   },
   {
-    image: "/streetwear-collection-hoodies-modern-aesthetic.jpg",
+    image: "https://a.storyblok.com/f/165154/1280x720/2ba3c03ccf/7_collection-of-hoodies_2.jpg/m/",
     title: "New Collection",
     subtitle: "Limited Edition",
   },
   {
-    image: "/premium-hoodie-fashion-model-urban-style.jpg",
-    title: "Your Style",
+    image: "/https://tse3.mm.bing.net/th/id/OIP.L6C77smp2oHTgX_weInsuAHaEJ?pid=Api&P=0&h=180",
+    title: "Fashion elivates you ",
     subtitle: "Your Statement",
   },
 ]
