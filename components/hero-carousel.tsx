@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
+
 const slides = [
   {
     image: "https://img.freepik.com/premium-photo/hoodies-different-colors-hang-hanger_694697-83.jpg",
@@ -20,6 +21,7 @@ const slides = [
     subtitle: "Your Statement",
   },
 ]
+
 
 export default function HeroCarousel() {
   const [current, setCurrent] = useState(0)
