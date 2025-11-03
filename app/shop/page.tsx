@@ -1,85 +1,23 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import ProductCard from "@/components/product-card"
 import { ChevronDown } from "lucide-react"
 
-const allProducts = [
-  {
-    id: 1,
-    name: "Classic Black Hoodie",
-    price: 1999,
-    image: "/black-hoodie-premium-streetwear.jpg",
-    colors: ["Black", "White", "Navy"],
-    category: "Hoodies",
-    size: "All",
-  },
-  {
-    id: 2,
-    name: "Urban Grey Hoodie",
-    price: 2199,
-    image: "/grey-hoodie-modern-design.jpg",
-    colors: ["Grey", "Dark Grey"],
-    category: "Hoodies",
-    size: "All",
-  },
-  {
-    id: 3,
-    name: "Oversized Charcoal",
-    price: 2399,
-    image: "/oversized-charcoal-hoodie-fashion.jpg",
-    colors: ["Charcoal", "Black"],
-    category: "Hoodies",
-    size: "Oversized",
-  },
-  {
-    id: 4,
-    name: "Vintage Cream Hoodie",
-    price: 2299,
-    image: "/cream-vintage-hoodie-luxury.jpg",
-    colors: ["Cream", "Off-White"],
-    category: "Hoodies",
-    size: "All",
-  },
-  {
-    id: 5,
-    name: "Autumn Edition Hoodie",
-    price: 2499,
-    image: "/autumn-hoodie-new-collection-streetwear.jpg",
-    colors: ["Rust", "Bronze"],
-    category: "Limited Edition",
-    size: "All",
-  },
-  {
-    id: 6,
-    name: "Limited Edition Drop",
-    price: 3299,
-    image: "/limited-edition-hoodie-exclusive.jpg",
-    colors: ["Black", "White"],
-    category: "Limited Edition",
-    size: "All",
-  },
-  {
-    id: 7,
-    name: "Premium Midnight Black",
-    price: 2599,
-    image: "/premium-midnight-black-hoodie.jpg",
-    colors: ["Black"],
-    category: "Hoodies",
-    size: "All",
-  },
-  {
-    id: 8,
-    name: "Sunset Orange Hoodie",
-    price: 2399,
-    image: "/sunset-orange-hoodie.jpg",
-    colors: ["Orange", "Rust"],
-    category: "Hoodies",
-    size: "All",
-  },
-]
+interface Product {
+  _id: string
+  name: string
+  price: number
+  mrp: number
+  images: string[]
+  colors: string[]
+  sizes: string[]
+  category: string
+  inStock: boolean
+  discount: number
+}
 
 const priceRanges = [
   { label: "All Prices", min: 0, max: Number.POSITIVE_INFINITY },
@@ -89,12 +27,37 @@ const priceRanges = [
 ]
 
 export default function ShopPage() {
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [selectedPrice, setSelectedPrice] = useState({ min: 0, max: Number.POSITIVE_INFINITY })
   const [sortBy, setSortBy] = useState("newest")
   const [showFilters, setShowFilters] = useState(false)
 
-  const categories = ["All", ...new Set(allProducts.map((p) => p.category))]
+  // Fetch products from MongoDB
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const res = await fetch("/api/admin/products")
+        const data = await res.json()
+        console.log("Products API response:", data)
+        if (data.success && data.products) {
+          setAllProducts(data.products || [])
+        }
+      } catch (error) {
+        console.error("Failed to fetch products:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
+
+  // Get unique categories
+  const categories = useMemo(() => {
+    const cats = new Set(allProducts.map((p) => p.category))
+    return ["All", ...Array.from(cats)]
+  }, [allProducts])
 
   const filteredProducts = useMemo(() => {
     let filtered = allProducts
@@ -110,12 +73,22 @@ export default function ShopPage() {
       filtered.sort((a, b) => a.price - b.price)
     } else if (sortBy === "price-high") {
       filtered.sort((a, b) => b.price - a.price)
-    } else if (sortBy === "newest") {
-      filtered.sort((a, b) => b.id - a.id)
     }
 
     return filtered
-  }, [selectedCategory, selectedPrice, sortBy])
+  }, [allProducts, selectedCategory, selectedPrice, sortBy])
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-lg">Loading products...</p>
+        </div>
+        <Footer />
+      </>
+    )
+  }
 
   return (
     <>
@@ -124,7 +97,7 @@ export default function ShopPage() {
         {/* Page Header */}
         <div className="border-b border-gray-200 px-4 md:px-6 py-6 md:py-8 max-w-7xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Our Collection</h1>
-          <p className="text-sm md:text-base text-gray-600">Discover our exclusive range of premium hoodies</p>
+          <p className="text-sm md:text-base text-gray-600">Discover our exclusive range of premium products</p>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
@@ -215,7 +188,16 @@ export default function ShopPage() {
               {filteredProducts.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                   {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard 
+                      key={product._id} 
+                      product={{
+                        id: product._id,
+                        name: product.name,
+                        price: product.price,
+                        image: product.images[0] || "/placeholder.jpg",
+                        colors: product.colors,
+                      }} 
+                    />
                   ))}
                 </div>
               ) : (

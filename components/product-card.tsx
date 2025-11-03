@@ -8,7 +8,7 @@ import { useWishlist } from "@/hooks/use-wishlist"
 
 interface ProductCardProps {
   product: {
-    id: number
+    id: number | string
     name: string
     price: number
     mrp?: number
@@ -22,11 +22,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [selectedColor, setSelectedColor] = useState(product.colors[0])
   const { addItem } = useCart()
   const { isInWishlist, toggleWishlist } = useWishlist()
-  const inWishlist = isInWishlist(product.id)
+  const productId = typeof product.id === 'string' ? parseInt(product.id, 10) || 0 : product.id
+  const inWishlist = isInWishlist(productId)
 
   const handleAddToCart = () => {
     addItem({
-      id: product.id,
+      id: productId,
       name: product.name,
       price: product.price,
       image: product.image,
@@ -49,7 +50,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                toggleWishlist({ id: product.id, name: product.name, price: product.price, image: product.image })
+                toggleWishlist({ id: productId, name: product.name, price: product.price, image: product.image })
               }}
               className={`p-2.5 md:p-3 rounded-full opacity-0 group-hover:opacity-100 transition transform group-hover:scale-100 scale-75 ${
                 inWishlist ? "bg-red-500 text-white" : "bg-white text-black"

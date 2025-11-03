@@ -1,7 +1,6 @@
 import { MongoClient, ObjectId } from "mongodb"
 
-const uri =
-  process.env.MONGODB_URI || "mongodb+srv://rarerabbit:r@rer@bbit@rarerabbit.uyfrgct.mongodb.net/?appName=rarerabbit"
+const uri = process.env.MONGODB_URI || "mongodb+srv://rarerabbit:r@rer@bbit@rarerabbit.uyfrgct.mongodb.net/thehouseofrare?retryWrites=true&w=majority&appName=rarerabbit"
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const client = new MongoClient(uri)
@@ -9,7 +8,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
   try {
     await client.connect()
-    const db = client.db("rarerabbit")
+    const db = client.db("thehouseofrare")
 
     const product = await db.collection("products").findOne({
       _id: new ObjectId(id),
@@ -38,7 +37,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   try {
     const body = await request.json()
     await client.connect()
-    const db = client.db("rarerabbit")
+    const db = client.db("thehouseofrare")
 
     const result = await db.collection("products").updateOne(
       { _id: new ObjectId(id) },
@@ -72,7 +71,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   try {
     await client.connect()
-    const db = client.db("rarerabbit")
+    const db = client.db("thehouseofrare")
 
     const result = await db.collection("products").deleteOne({
       _id: new ObjectId(id),

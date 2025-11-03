@@ -10,63 +10,37 @@ import { useAuth } from "@/hooks/use-auth"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
-const allProducts = [
-  {
-    id: 1,
-    name: "REGULAR FIT GRAPHIC PRINT SWEATSHIRT",
-    subtitle: "LOBO - NAVY",
-    mrp: 4499,
-    price: 3959,
-    discount: 12,
-    images: [
-      "https://cdn.shopify.com/s/files/1/0752/6435/files/LAURELLIGHTTURQ-CC1380_900x.webp?v=1743582326",
-      "https://thehouseofrare.com/cdn/shop/files/LOBONAVY00798HERO-vmake.webp?v=1743582715",
-      "https://thehouseofrare.com/cdn/shop/files/WALEDUSKYPINK01251.webp?v=1743581644",
-      "https://cdn.shopify.com/s/files/1/0752/6435/files/KANTOFFWHITE00263HERO_900x.webp?v=1743581669",
-    ],
-    description:
-      "Elevate your casual wardrobe with our Regular Fit Graphic Print Sweatshirt. Made from premium cotton blend fabric, this sweatshirt features a bold graphic print on the back and sleeves, offering both comfort and style. Perfect for layering or wearing solo.",
-    longDescription: `Crafted with care and attention to detail, this sweatshirt is designed to be your go-to choice for everyday comfort. The regular fit ensures a relaxed silhouette that moves with you, while the soft fabric provides warmth without compromising breathability.
-
-The eye-catching graphic print adds a contemporary edge to this classic piece, making it perfect for both casual outings and relaxed weekends. Whether you're running errands or meeting friends, this sweatshirt delivers effortless style.`,
-    colors: ["Navy", "Dusky Pink", "Off White", "Black"],
-    sizes: ["XS-36", "S-38", "M-40", "L-42", "XL-44", "XXL-46", "3XL-48"],
-    rating: 4.5,
-    reviews: 128,
-    features: [
-      "Premium Cotton Blend (80% Cotton, 20% Polyester)",
-      "Regular Fit for Comfortable Wear",
-      "Graphic Print on Back and Sleeves",
-      "Ribbed Cuffs and Hem",
-      "Machine Washable",
-      "100% Authentic Product",
-    ],
-    gstSavings: 111,
-    fabricCare: [
-      "Machine wash cold with similar colors",
-      "Do not bleach",
-      "Tumble dry low",
-      "Iron on low heat if needed",
-      "Do not dry clean",
-    ],
-    sizeChart: {
-      headers: ["Size", "Chest (in)", "Length (in)", "Shoulder (in)"],
-      data: [
-        ["XS-36", "36", "26", "16.5"],
-        ["S-38", "38", "27", "17"],
-        ["M-40", "40", "28", "17.5"],
-        ["L-42", "42", "29", "18"],
-        ["XL-44", "44", "30", "18.5"],
-        ["XXL-46", "46", "31", "19"],
-        ["3XL-48", "48", "32", "19.5"],
-      ],
-    },
-  },
-]
+interface Product {
+  _id: string
+  name: string
+  subtitle?: string
+  description: string
+  longDescription?: string
+  price: number
+  mrp: number
+  discount: number
+  images: string[]
+  colors: string[]
+  sizes: string[]
+  category: string
+  features?: string[]
+  fabricCare?: string[]
+  stockQuantity: number
+  inStock: boolean
+  sku?: string
+  rating?: number
+  reviews?: number
+  sizeChart?: {
+    headers: string[]
+    data: string[][]
+  }
+}
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const [product, setProduct] = useState<Product | null>(null)
+  const [loading, setLoading] = useState(true)
   const [mainImage, setMainImage] = useState(0)
-  const [selectedColor, setSelectedColor] = useState("Navy")
+  const [selectedColor, setSelectedColor] = useState("")
   const [selectedSize, setSelectedSize] = useState("")
   const [quantity, setQuantity] = useState(1)
   const [pincode, setPincode] = useState("")
@@ -84,9 +58,45 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     params.then(setResolvedParams)
   }, [params])
 
-  const productId = resolvedParams?.id ? Number.parseInt(resolvedParams.id) : 1
-  const product = allProducts.find((p) => p.id === productId) || allProducts[0]
-  const isWishlisted = isInWishlist(product.id)
+  useEffect(() => {
+    if (!resolvedParams?.id) return
+
+    async function fetchProduct() {
+      try {
+        const res = await fetch(`/api/admin/products/${resolvedParams.id}`)
+        const data = await res.json()
+        console.log("Product detail API response:", data)
+        if (data.success && data.product) {
+          setProduct(data.product)
+          setSelectedColor(data.product.colors?.[0] || "")
+          setSelectedSize(data.product.sizes?.[0] || "")
+        } else {
+          router.push("/shop")
+        }
+      } catch (error) {
+        console.error("Failed to fetch product:", error)
+        router.push("/shop")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProduct()
+  }, [resolvedParams, router])
+
+  const productId = product ? (typeof product._id === 'string' ? parseInt(product._id, 10) || 0 : 0) : 0
+  const isWishlisted = isInWishlist(productId)
+
+  if (loading || !product) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-lg">Loading product...</p>
+        </div>
+        <Footer />
+      </>
+    )
+  }
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -94,7 +104,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       return
     }
     addItem({
-      id: product.id,
+      id: productId,
       name: product.name,
       price: product.price,
       image: product.images[0],
@@ -128,7 +138,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     }
   }
 
-  const gstSavings = product.gstSavings || Math.round((product.mrp - product.price) * 0.18)
+  const gstSavings = Math.round((product.mrp - product.price) * 0.18)
 
   const openImageModal = (index: number) => {
     setModalImageIndex(index)
@@ -177,7 +187,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       )}
 
       {/* Size Chart Modal */}
-      {showSizeChart && (
+      {showSizeChart && product.sizeChart && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 md:p-6 flex justify-between items-center">
@@ -258,7 +268,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     onClick={(e) => {
                       e.stopPropagation()
                       toggleWishlist({
-                        id: product.id,
+                        id: productId,
                         name: product.name,
                         price: product.price,
                         image: product.images[0],
@@ -455,50 +465,56 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
 
             {/* Product Features */}
-            <div className="border-t border-gray-200 pt-8 md:pt-12">
-              <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 uppercase">Product Features</h2>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {product.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="text-green-600 font-bold text-lg">✓</span>
-                    <span className="text-sm md:text-base text-gray-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {product.features && product.features.length > 0 && (
+              <div className="border-t border-gray-200 pt-8 md:pt-12">
+                <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 uppercase">Product Features</h2>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {product.features.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="text-green-600 font-bold text-lg">✓</span>
+                      <span className="text-sm md:text-base text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Fabric Care */}
-            <div className="border-t border-gray-200 pt-8 md:pt-12">
-              <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 uppercase">Fabric Care</h2>
-              <ul className="space-y-2">
-                {product.fabricCare.map((care, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="text-gray-400 text-lg">•</span>
-                    <span className="text-sm md:text-base text-gray-700">{care}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {product.fabricCare && product.fabricCare.length > 0 && (
+              <div className="border-t border-gray-200 pt-8 md:pt-12">
+                <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 uppercase">Fabric Care</h2>
+                <ul className="space-y-2">
+                  {product.fabricCare.map((care, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="text-gray-400 text-lg">•</span>
+                      <span className="text-sm md:text-base text-gray-700">{care}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Reviews Section */}
-            <div className="border-t border-gray-200 pt-8 md:pt-12">
-              <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 uppercase">Ratings & Reviews</h2>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-1">
-                  {Array(5)
-                    .fill(0)
-                    .map((_, i) => (
-                      <span key={i} className={`text-xl md:text-2xl ${i < Math.floor(product.rating) ? "text-yellow-400" : "text-gray-300"}`}>
-                        ★
-                      </span>
-                    ))}
-                </div>
-                <div>
-                  <p className="text-base md:text-lg font-bold">{product.rating} out of 5</p>
-                  <p className="text-xs md:text-sm text-gray-600">Based on {product.reviews} reviews</p>
+            {product.rating && product.reviews && (
+              <div className="border-t border-gray-200 pt-8 md:pt-12">
+                <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 uppercase">Ratings & Reviews</h2>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center gap-1">
+                    {Array(5)
+                      .fill(0)
+                      .map((_, i) => (
+                        <span key={i} className={`text-xl md:text-2xl ${i < Math.floor(product.rating || 0) ? "text-yellow-400" : "text-gray-300"}`}>
+                          ★
+                        </span>
+                      ))}
+                  </div>
+                  <div>
+                    <p className="text-base md:text-lg font-bold">{product.rating} out of 5</p>
+                    <p className="text-xs md:text-sm text-gray-600">Based on {product.reviews} reviews</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </main>

@@ -1,7 +1,6 @@
 import { MongoClient } from "mongodb"
 
-const uri =
-  process.env.MONGODB_URI || "mongodb+srv://rarerabbit:r@rer@bbit@rarerabbit.uyfrgct.mongodb.net/?appName=rarerabbit"
+const uri = process.env.MONGODB_URI || "mongodb+srv://rarerabbit:r@rer@bbit@rarerabbit.uyfrgct.mongodb.net/thehouseofrare?retryWrites=true&w=majority&appName=rarerabbit"
 
 export async function POST(request: Request) {
   const client = new MongoClient(uri)
@@ -14,7 +13,7 @@ export async function POST(request: Request) {
     }
 
     await client.connect()
-    const db = client.db("rarerabbit")
+    const db = client.db("thehouseofrare")
 
     const user = await db.collection("users").findOne({ email })
 

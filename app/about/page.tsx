@@ -10,10 +10,17 @@ export default function AboutPage() {
         {/* Hero Section */}
         <section className="py-12 md:py-20 px-4 md:px-8 bg-gray-50">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">About Rare Rabbit</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">About ROFERO</h1>
             <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
               We believe in creating premium, sustainable hoodies that empower individuals to express their unique
               style. Every piece is crafted with precision, passion, and purpose.
+            </p>
+            <p>
+              About - ROFERO stands for those who keep fighting when no one’s watching.
+It’s born from the word “Rise” — because every time life breaks you, you come back harder.
+Every thread in ROFERO is a symbol of strength.
+Every drop is a chapter of survival.
+ROFERO — for those who rise, roar, and never retreat.
             </p>
           </div>
         </section>

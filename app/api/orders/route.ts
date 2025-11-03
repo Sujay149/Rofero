@@ -1,14 +1,13 @@
 import { MongoClient } from "mongodb"
 
-const uri =
-  process.env.MONGODB_URI || "mongodb+srv://rarerabbit:r@rer@bbit@rarerabbit.uyfrgct.mongodb.net/?appName=rarerabbit"
+const uri = process.env.MONGODB_URI || "mongodb+srv://rarerabbit:r@rer@bbit@rarerabbit.uyfrgct.mongodb.net/thehouseofrare?retryWrites=true&w=majority&appName=rarerabbit"
 
 export async function GET() {
   const client = new MongoClient(uri)
 
   try {
     await client.connect()
-    const db = client.db("rarerabbit")
+    const db = client.db("thehouseofrare")
     const orders = await db.collection("orders").find({}).toArray()
 
     console.log("[v0] Orders fetched from MongoDB")
@@ -34,7 +33,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     await client.connect()
-    const db = client.db("rarerabbit")
+    const db = client.db("thehouseofrare")
 
     const result = await db.collection("orders").insertOne({
       ...body,

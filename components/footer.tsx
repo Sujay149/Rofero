@@ -139,7 +139,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="border-t border-gray-200 pt-6 md:pt-8 text-center text-xs md:text-sm text-gray-600">
-          <p>All Rights Reserved The House Of Rare © 2025</p>
+          <p>All Rights Reserved The ROFERO © 2025</p>
         </div>
       </div>
     </footer>
