@@ -1,9 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, X, Menu, Heart, ShoppingCart, User, LogOut } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { useCart } from "@/hooks/use-cart"
 import { useAuth } from "@/hooks/use-auth"
 
@@ -13,15 +13,50 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showUserMenu, setShowUserMenu] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { items } = useCart()
   const { user, loading, setShowLoginModal, logout } = useAuth()
   const cartCount = items.length
 
+  // Sync search query with URL parameter
+  useEffect(() => {
+    const urlSearchQuery = searchParams.get("search")
+    if (urlSearchQuery) {
+      setSearchQuery(urlSearchQuery)
+      setIsSearchOpen(true)
+    }
+  }, [searchParams])
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    if (isMobileOpen) {
+      document.body.classList.add('overflow-hidden')
+    } else {
+      document.body.classList.remove('overflow-hidden')
+    }
+    return () => {
+      document.body.classList.remove('overflow-hidden')
+    }
+  }, [isMobileOpen])
+
   const handleSearch = () => {
     if (searchQuery.trim()) {
       router.push(`/shop?search=${encodeURIComponent(searchQuery)}`)
-      setIsSearchOpen(false)
-      setSearchQuery("")
+      // Don't close search or clear query - keep it visible
+      // setIsSearchOpen(false)
+      // setSearchQuery("")
+    }
+  }
+
+  const handleClearSearch = () => {
+    setSearchQuery("")
+    setIsSearchOpen(false)
+    // If we're on the shop page with a search, redirect to shop without search
+    if (pathname === "/shop" && searchParams.get("search")) {
+      router.push("/shop")
     }
   }
 
@@ -62,7 +97,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center" aria-label="Home">
             <img
               src="https://images.yourstory.com/cs/images/companies/shoprarerabbitlogo-1719813730851.jpg?fm=auto&ar=1%3A1&mode=fill&fill=solid&fill-color=fff&format=auto&w=1920&q=75"
-              alt="Rare Rabbit"
+              alt="Refero"
               className="w-10 h-10 md:w-12 md:h-12 object-contain"
             />
             <span className="text-xs font-semibold tracking-widest hidden sm:inline ml-2">ROFERO</span>
@@ -164,25 +199,38 @@ export default function Navbar() {
       {isSearchOpen && (
         <div className="border-t border-gray-200 px-4 md:px-6 lg:px-8 py-3 bg-white">
           <div className="flex gap-2 max-w-7xl mx-auto">
-            <input
-              type="text"
-              placeholder="Search hoodies..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
-              autoFocus
-            />
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Search products, categories, colors..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black pr-10"
+                autoFocus
+              />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition"
+                  aria-label="Clear search"
+                >
+                  <X size={16} className="text-gray-500" />
+                </button>
+              )}
+            </div>
             <button
               onClick={handleSearch}
-              className="px-4 md:px-6 py-2 bg-black text-white text-sm rounded hover:bg-gray-800 transition"
+              className="px-4 md:px-6 py-2 bg-black text-white text-sm rounded hover:bg-gray-800 transition flex items-center gap-2"
             >
-              Search
+              <Search size={16} />
+              <span className="hidden sm:inline">Search</span>
             </button>
           </div>
         </div>
       )}
 
+      {/* Mobile Sidebar Menu */}
       {isMobileOpen && (
         <div className="md:hidden border-t border-gray-200 px-4 py-4 space-y-3 bg-white">
           <Link href="/shop" className="block text-sm font-semibold hover:text-gray-600 transition">
@@ -203,13 +251,143 @@ export default function Navbar() {
               <button onClick={handleLogout} className="block w-full text-left text-sm font-semibold text-red-600 hover:text-red-700 transition">
                 LOGOUT
               </button>
-            </>
-          ) : (
-            <button onClick={() => setShowLoginModal(true)} className="block w-full text-left text-sm font-semibold hover:text-gray-600 transition">
-              LOGIN / SIGN UP
-            </button>
-          )}
-        </div>
+            </div>
+
+            {/* User Section */}
+            {user ? (
+              <div className="p-4 bg-gray-50 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt={user.displayName || "User"} className="w-12 h-12 rounded-full border-2 border-white shadow" />
+                  ) : (
+                    <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center font-bold text-lg">
+                      {user.displayName?.charAt(0) || user.email?.charAt(0) || "U"}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{user.displayName || "User"}</p>
+                    <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 bg-gray-50 border-b border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowLoginModal(true)
+                    setIsMobileOpen(false)
+                  }}
+                  className="w-full bg-black text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                >
+                  <User size={18} />
+                  Login / Sign Up
+                </button>
+              </div>
+            )}
+
+            {/* Navigation Links */}
+            <div className="py-2">
+              {/* Shop Section */}
+              <div className="px-2 py-2">
+                <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Shop</p>
+                <Link
+                  href="/shop"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ShoppingCart size={18} />
+                  All Products
+                </Link>
+              </div>
+
+              <hr className="my-2 border-gray-200" />
+
+              {/* Account Section */}
+              {user && (
+                <>
+                  <div className="px-2 py-2">
+                    <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">My Account</p>
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsMobileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <User size={18} />
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/my-orders"
+                      onClick={() => setIsMobileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <ShoppingCart size={18} />
+                      My Orders
+                    </Link>
+                    <Link
+                      href="/wishlist"
+                      onClick={() => setIsMobileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <Heart size={18} />
+                      Wishlist
+                    </Link>
+                  </div>
+                  <hr className="my-2 border-gray-200" />
+                </>
+              )}
+
+              {/* General Links */}
+              <div className="px-2 py-2">
+                <p className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">More</p>
+                <Link
+                  href="/about"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  About Us
+                </Link>
+                <Link
+                  href="/track"
+                  onClick={() => setIsMobileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Track Order
+                </Link>
+              </div>
+
+              {/* Logout */}
+              {user && (
+                <>
+                  <hr className="my-2 border-gray-200" />
+                  <div className="px-2 py-2">
+                    <button
+                      onClick={() => {
+                        handleLogout()
+                        setIsMobileOpen(false)
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors w-full"
+                    >
+                      <LogOut size={18} />
+                      Logout
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gray-50 border-t border-gray-200">
+              <p className="text-xs text-center text-gray-500">© 2025 ROFERO. All rights reserved.</p>
+            </div>
+          </div>
+        </>
       )}
     </nav>
   )

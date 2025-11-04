@@ -291,7 +291,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </Link>
             <span>/</span>
             <Link href="/shop" className="hover:underline hover:text-black">
-              Rare Rabbit
+              Refero
             </Link>
             <span>/</span>
             <span className="text-gray-900 font-medium truncate">{product.subtitle}</span>
@@ -302,7 +302,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="space-y-4">
               {/* Main Image */}
               <div 
-                className="relative bg-gray-100 rounded-lg overflow-hidden aspect-[3/4] cursor-zoom-in"
+                className="relative bg-gray-100 rounded-lg overflow-hidden aspect-square md:aspect-[4/5] cursor-zoom-in"
                 onClick={() => openImageModal(mainImage)}
               >
                 <img

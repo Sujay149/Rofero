@@ -30,6 +30,15 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "login" }: Au
     }
   }, [isOpen, defaultMode])
 
+  // Close on ESC key
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    if (isOpen) window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -81,15 +90,23 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "login" }: Au
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md relative overflow-hidden animate-in fade-in zoom-in duration-300">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-2xl w-full max-w-md relative overflow-hidden animate-in fade-in zoom-in duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10"
-          disabled={loading}
+          className="absolute top-4 right-4 p-2 bg-white border border-gray-200 rounded-full shadow-sm transition-colors z-10 flex items-center gap-1"
+          title="Close"
+          aria-label="Close authentication modal"
         >
           <X className="w-5 h-5" />
+          <span className="sr-only">Close</span>
         </button>
 
         {/* Header */}

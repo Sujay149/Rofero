@@ -192,7 +192,7 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="bg-black text-white p-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center flex-col md:flex-row gap-4">
-          <h1 className="text-3xl font-bold">RARE RABBIT ADMIN</h1>
+          <h1 className="text-3xl font-bold">Refero ADMIN</h1>
           <button
             onClick={() => router.push("/")}
             className="px-4 py-2 bg-gray-800 rounded hover:bg-gray-700 transition text-sm"

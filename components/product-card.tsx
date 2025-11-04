@@ -39,7 +39,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="group">
       <Link href={`/product/${product.id}`} className="block">
-        <div className="relative overflow-hidden bg-gray-200 rounded-lg mb-2 md:mb-4 h-48 sm:h-64 md:h-80 cursor-pointer">
+  <div
+    className="relative overflow-hidden bg-gray-200 rounded-lg mb-2 md:mb-4 cursor-pointer"
+    style={{ aspectRatio: '1 / 1' }}
+  >
           <img
             src={product.image || "/placeholder.svg"}
             alt={product.name}

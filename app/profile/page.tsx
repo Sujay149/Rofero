@@ -2,18 +2,48 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import { useAuth } from "@/hooks/use-auth"
-import { Mail, Phone, MapPin, LogOut, Edit2 } from "lucide-react"
+import { Mail, Phone, MapPin, LogOut, Edit2, Package, Truck, CheckCircle, Clock } from "lucide-react"
 import Link from "next/link"
+
+interface Order {
+  _id: string
+  orderId: string
+  items: Array<{
+    productId: string
+    name: string
+    price: number
+    quantity: number
+    size: string
+    color: string
+    image: string
+  }>
+  totalAmount: number
+  status: string
+  paymentStatus: string
+  shippingAddress: {
+    fullName: string
+    address: string
+    city: string
+    state: string
+    pincode: string
+    phone: string
+  }
+  createdAt: string
+  trackingNumber?: string
+  estimatedDelivery?: string
+}
 
 export default function ProfilePage() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loadingOrders, setLoadingOrders] = useState(true)
   const [profileData, setProfileData] = useState({
     fullName: user?.displayName || "",
     email: user?.email || "",
@@ -23,6 +53,27 @@ export default function ProfilePage() {
     state: "",
     pincode: "",
   })
+
+  // Fetch user orders
+  useEffect(() => {
+    if (user?.email) {
+      fetchOrders()
+    }
+  }, [user])
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch(`/api/orders?email=${user?.email}`)
+      const data = await res.json()
+      if (data.success) {
+        setOrders(data.orders || [])
+      }
+    } catch (error) {
+      console.error("Failed to fetch orders:", error)
+    } finally {
+      setLoadingOrders(false)
+    }
+  }
 
   // Redirect to login if not authenticated
   if (!user) {
@@ -240,16 +291,118 @@ export default function ProfilePage() {
                 </button>
               )}
 
-              {/* Recent Orders */}
-              <div className="bg-white rounded-lg p-6 border border-gray-200">
-                <h2 className="text-2xl font-bold mb-6">Recent Orders</h2>
-                <p className="text-gray-600 text-center py-8">No orders yet. Start shopping now!</p>
-                <Link
-                  href="/shop"
-                  className="block w-full bg-gray-100 text-center py-3 rounded font-semibold hover:bg-gray-200 transition"
-                >
-                  Browse Products
-                </Link>
+              {/* My Orders */}
+              <div className="bg-white rounded-lg p-4 md:p-6 border border-gray-200">
+                <div className="flex items-center justify-between mb-4 md:mb-6">
+                  <h2 className="text-xl md:text-2xl font-bold">My Orders</h2>
+                  <Link
+                    href="/my-orders"
+                    className="text-sm font-semibold text-black hover:underline"
+                  >
+                    View All
+                  </Link>
+                </div>
+
+                {loadingOrders ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">Loading orders...</p>
+                  </div>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-600 mb-4">No orders yet. Start shopping now!</p>
+                    <Link
+                      href="/shop"
+                      className="inline-block bg-black text-white px-6 py-2 rounded font-semibold hover:bg-gray-900 transition"
+                    >
+                      Browse Products
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.slice(0, 3).map((order) => (
+                      <div
+                        key={order._id}
+                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
+                      >
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-3">
+                          <div>
+                            <p className="text-sm text-gray-600">Order ID</p>
+                            <p className="font-semibold">{order.orderId}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {order.status === "delivered" && (
+                              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                                <CheckCircle size={14} />
+                                Delivered
+                              </span>
+                            )}
+                            {order.status === "shipped" && (
+                              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                                <Truck size={14} />
+                                Shipped
+                              </span>
+                            )}
+                            {order.status === "processing" && (
+                              <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                                <Clock size={14} />
+                                Processing
+                              </span>
+                            )}
+                            {order.status === "pending" && (
+                              <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                                <Clock size={14} />
+                                Pending
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3 mb-3">
+                          {order.items.slice(0, 3).map((item, idx) => (
+                            <img
+                              key={idx}
+                              src={item.image}
+                              alt={item.name}
+                              className="w-16 h-16 object-cover rounded border border-gray-200"
+                            />
+                          ))}
+                          {order.items.length > 3 && (
+                            <div className="w-16 h-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center">
+                              <span className="text-xs font-semibold text-gray-600">
+                                +{order.items.length - 3}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-gray-200">
+                          <div>
+                            <p className="text-sm text-gray-600">
+                              {order.items.length} item{order.items.length > 1 ? "s" : ""} • ₹
+                              {order.totalAmount.toLocaleString("en-IN")}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Ordered on {new Date(order.createdAt).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </p>
+                          </div>
+                          <Link
+                            href={`/track?orderId=${order.orderId}`}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 border border-black rounded hover:bg-black hover:text-white transition text-sm font-semibold"
+                          >
+                            <Truck size={16} />
+                            Track Order
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

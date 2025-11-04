@@ -31,7 +31,7 @@ ROFERO — for those who rise, roar, and never retreat.
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Our Story</h2>
               <p className="text-gray-600 text-lg leading-relaxed mb-4">
-                Founded in 2020, Rare Rabbit started as a vision to revolutionize the hoodie industry. We noticed a gap
+                Founded in 2020, Refero started as a vision to revolutionize the hoodie industry. We noticed a gap
                 in the market for high-quality, affordable hoodies that didn't compromise on style or comfort.
               </p>
               <p className="text-gray-600 text-lg leading-relaxed mb-4">
@@ -46,7 +46,7 @@ ROFERO — for those who rise, roar, and never retreat.
             <div className="bg-gray-200 rounded-lg h-80 flex items-center justify-center">
               <img
                 src="/rare-rabbit-team-office.jpg"
-                alt="Rare Rabbit Team"
+                alt="Refero Team"
                 className="w-full h-full object-cover rounded-lg"
               />
             </div>

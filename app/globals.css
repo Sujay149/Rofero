@@ -123,3 +123,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mobile bottom navigation spacing */
+@media (max-width: 767px) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Prevent scrolling when modal is open */
+body.overflow-hidden {
+  overflow: hidden;
+}
