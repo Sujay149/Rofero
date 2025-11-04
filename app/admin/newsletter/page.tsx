@@ -75,7 +75,7 @@ export default function NewsletterPage() {
       {/* Header */}
       <div className="bg-black text-white p-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-3xl font-bold">RARE RABBIT NEWSLETTER</h1>
+          <h1 className="text-3xl font-bold">Refero NEWSLETTER</h1>
           <Link href="/admin" className="px-4 py-2 bg-gray-800 rounded hover:bg-gray-700 transition text-sm">
             Back to Admin
           </Link>

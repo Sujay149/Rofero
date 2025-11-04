@@ -3,14 +3,15 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import AuthProvider from "@/components/auth-provider"
+import BottomNav from "@/components/bottom-nav"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Rare Rabbit - Premium Hoodies & Apparel",
-  description: "Shop exclusive unisex hoodies and streetwear from Rare Rabbit. Premium quality, sustainable fashion.",
+  title: "Refero - Premium Hoodies & Apparel",
+  description: "Shop exclusive unisex hoodies and streetwear from Refero. Premium quality, sustainable fashion.",
   generator: 'v0.app',
   icons: {
     icon: [
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body className={`${_geist.className} antialiased`}>
         <AuthProvider>
           {children}
+          <BottomNav />
         </AuthProvider>
         <Analytics />
       </body>

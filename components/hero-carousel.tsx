@@ -5,6 +5,18 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 
 const slides = [
   {
+    image: "/carousel/banner1.webp",
+    title: "New Arrival",
+    subtitle: "Explore our latest drop",
+    colors: ["Black", "White"],
+  },
+   {
+    image: "/carousel/banner3.png",
+    title: "Winter Specials",
+    subtitle: "Our First Winter Hoodies Drop",
+    colors: ["Black"],
+  },
+  {
     image: "https://cdn.shopify.com/s/files/1/0752/6435/files/LAURELLIGHTTURQ-CC1380_900x.webp?v=1743582326",
     title: "Premium Hoodies",
     subtitle: "Experience Luxury Comfort",

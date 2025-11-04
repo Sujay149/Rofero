@@ -23,6 +23,22 @@ export async function POST(request: Request) {
       )
     }
 
+    // Check if email is configured
+    const isEmailConfigured = 
+      process.env.EMAIL_USER && 
+      process.env.EMAIL_PASS
+
+    if (!isEmailConfigured) {
+      console.warn('[Email] Email service not configured. Skipping email send.')
+      // Return success to prevent blocking the order flow
+      return NextResponse.json({ 
+        success: true, 
+        warning: 'Email service not configured',
+        message: 'Operation completed without sending email',
+        messageId: 'skipped' 
+      })
+    }
+
     // Send email
     const result = await sendEmail({ to, subject, type, data })
 
@@ -33,16 +49,23 @@ export async function POST(request: Request) {
         messageId: result.messageId,
       })
     } else {
-      return NextResponse.json(
-        { success: false, error: result.error },
-        { status: 500 }
-      )
+      // Log error but don't fail the request (to prevent blocking order updates)
+      console.error('[Email] Failed to send email:', result.error)
+      return NextResponse.json({
+        success: true,
+        warning: 'Email send failed but operation completed',
+        message: 'Operation completed without sending email',
+        error: result.error,
+      })
     }
   } catch (error: any) {
     console.error('[Send Email API] Error:', error)
-    return NextResponse.json(
-      { success: false, error: error.message || 'Failed to send email' },
-      { status: 500 }
-    )
+    // Return success to prevent blocking the order flow
+    return NextResponse.json({
+      success: true,
+      warning: 'Email API error but operation completed',
+      message: 'Operation completed without sending email',
+      error: error.message || 'Unknown error',
+    })
   }
 }

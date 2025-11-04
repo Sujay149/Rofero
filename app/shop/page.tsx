@@ -37,12 +37,19 @@ export default function ShopPage() {
   const [sortBy, setSortBy] = useState("newest")
   const [showFilters, setShowFilters] = useState(false)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
-  // Set initial category from URL parameter
+  // Set initial category and search from URL parameters
   useEffect(() => {
     const categoryParam = searchParams.get("category")
+    const searchParam = searchParams.get("search")
+    
     if (categoryParam) {
       setSelectedCategory(categoryParam)
+    }
+    
+    if (searchParam) {
+      setSearchQuery(searchParam)
     }
   }, [searchParams])
 
@@ -84,11 +91,46 @@ export default function ShopPage() {
 
   const filteredProducts = useMemo(() => {
     let filtered = allProducts
+    let exactMatches: Product[] = []
+    let relatedMatches: Product[] = []
 
+    // Apply search filter
+    if (searchQuery && searchQuery.trim()) {
+      const lowerQuery = searchQuery.toLowerCase()
+      const searchWords = lowerQuery.split(' ').filter(word => word.length > 0)
+      
+      // First, find exact matches
+      exactMatches = filtered.filter((p) => {
+        const nameMatch = p.name.toLowerCase().includes(lowerQuery)
+        const categoryMatch = p.category.toLowerCase().includes(lowerQuery)
+        const colorMatch = p.colors.some((color) => color.toLowerCase().includes(lowerQuery))
+        return nameMatch || categoryMatch || colorMatch
+      })
+
+      // If no exact matches, find related products (partial word matches)
+      if (exactMatches.length === 0) {
+        relatedMatches = filtered.filter((p) => {
+          const nameWords = p.name.toLowerCase().split(' ')
+          const categoryWords = p.category.toLowerCase().split(' ')
+          
+          // Check if any search word matches any product word
+          return searchWords.some(searchWord => 
+            nameWords.some(nameWord => nameWord.includes(searchWord) || searchWord.includes(nameWord)) ||
+            categoryWords.some(catWord => catWord.includes(searchWord) || searchWord.includes(catWord)) ||
+            p.colors.some(color => color.toLowerCase().includes(searchWord))
+          )
+        })
+      }
+
+      filtered = exactMatches.length > 0 ? exactMatches : relatedMatches
+    }
+
+    // Apply category filter
     if (selectedCategory !== "All") {
       filtered = filtered.filter((p) => p.category === selectedCategory)
     }
 
+    // Apply price filter
     filtered = filtered.filter((p) => p.price >= selectedPrice.min && p.price <= selectedPrice.max)
 
     // Apply sorting
@@ -101,7 +143,22 @@ export default function ShopPage() {
     }
 
     return filtered
-  }, [allProducts, selectedCategory, selectedPrice, sortBy])
+  }, [allProducts, selectedCategory, selectedPrice, sortBy, searchQuery])
+
+  // Check if we're showing related products instead of exact matches
+  const isShowingRelated = useMemo(() => {
+    if (!searchQuery || !searchQuery.trim()) return false
+    
+    const lowerQuery = searchQuery.toLowerCase()
+    const hasExactMatch = allProducts.some((p) => {
+      const nameMatch = p.name.toLowerCase().includes(lowerQuery)
+      const categoryMatch = p.category.toLowerCase().includes(lowerQuery)
+      const colorMatch = p.colors.some((color) => color.toLowerCase().includes(lowerQuery))
+      return nameMatch || categoryMatch || colorMatch
+    })
+    
+    return !hasExactMatch && filteredProducts.length > 0
+  }, [searchQuery, allProducts, filteredProducts])
 
   if (loading) {
     return (
@@ -122,6 +179,35 @@ export default function ShopPage() {
     <>
       <Navbar />
       <main className="bg-white min-h-screen">
+        {/* Search Results Header */}
+        {searchQuery && (
+          <div className="border-b border-gray-100 px-4 sm:px-6 lg:px-8 py-6">
+            <div className="max-w-7xl mx-auto">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                {isShowingRelated ? "Related Products" : "Search Results"}
+              </h1>
+              <p className="text-gray-600">
+                {filteredProducts.length > 0 ? (
+                  <>
+                    {filteredProducts.length} {isShowingRelated ? "related product" : "result"}
+                    {filteredProducts.length !== 1 ? "s" : ""} {isShowingRelated ? "for" : "for"}{" "}
+                    <span className="font-semibold">"{searchQuery}"</span>
+                  </>
+                ) : (
+                  <>
+                    No results found for <span className="font-semibold">"{searchQuery}"</span>
+                  </>
+                )}
+              </p>
+              {isShowingRelated && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 mt-3 inline-block">
+                  No exact matches found. Showing related products instead.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+        
         {/* Page Header */}
         {/* <div className="border-b border-gray-100 px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
           <div className="max-w-7xl mx-auto">
@@ -326,8 +412,6 @@ export default function ShopPage() {
                         discount: product.discount,
                         image: product.images[0] || "/placeholder.jpg",
                         colors: product.colors,
-                        category: product.category,
-                        inStock: product.inStock,
                       }} 
                     />
                   ))}

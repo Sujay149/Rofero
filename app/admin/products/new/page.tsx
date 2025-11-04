@@ -17,6 +17,7 @@ interface ProductFormData {
   colors: string[]
   sizes: string[]
   category: string
+  gender: string
   features: string[]
   fabricCare: string[]
   stockQuantity: number
@@ -39,6 +40,7 @@ export default function NewProductPage() {
     colors: [],
     sizes: [],
     category: "Hoodies",
+    gender: "Unisex",
     features: [],
     fabricCare: [],
     stockQuantity: 0,
@@ -257,15 +259,30 @@ export default function NewProductPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">SKU</label>
-                  <input
-                    type="text"
-                    value={formData.sku}
-                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                  <label className="block text-sm font-medium mb-2">Gender *</label>
+                  <select
+                    required
+                    value={formData.gender}
+                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                     className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                    placeholder="PROD-001"
-                  />
+                  >
+                    <option value="Men">Men</option>
+                    <option value="Women">Women</option>
+                    <option value="Unisex">Unisex</option>
+                    <option value="Kids">Kids</option>
+                  </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">SKU</label>
+                <input
+                  type="text"
+                  value={formData.sku}
+                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                  placeholder="PROD-001"
+                />
               </div>
             </div>
 

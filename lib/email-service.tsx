@@ -103,12 +103,12 @@ export function generateOrderConfirmationEmail(data: OrderEmailData): EmailTempl
             <div class="section-title">Payment Method</div>
             <p>${data.paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment"}</p>
 
-            <p style="margin-top: 20px;">You will receive a tracking link via email once your order ships. Thank you for shopping with RARE RABBIT!</p>
+            <p style="margin-top: 20px;">You will receive a tracking link via email once your order ships. Thank you for shopping with Refero!</p>
 
             <a href="https://rarereabbit.com/track?order=${data.orderId}" class="button">Track Your Order</a>
           </div>
           <div class="footer">
-            <p>&copy; 2025 RARE RABBIT. All rights reserved.</p>
+            <p>&copy; 2025 Refero. All rights reserved.</p>
             <p>If you have any questions, contact us at support@rarereabbit.com</p>
           </div>
         </div>
@@ -169,7 +169,7 @@ export function generatePromotionalEmail(data: PromotionalEmailData): EmailTempl
           </div>
 
           <div class="footer">
-            <p>&copy; 2025 RARE RABBIT. All rights reserved.</p>
+            <p>&copy; 2025 Refero. All rights reserved.</p>
             <p>If you wish to unsubscribe from promotional emails, <a href="#" style="color: #0066cc;">click here</a></p>
           </div>
         </div>

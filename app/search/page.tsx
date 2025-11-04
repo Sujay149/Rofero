@@ -6,110 +6,81 @@ import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import ProductCard from "@/components/product-card"
 
-const allProducts = [
-  {
-    id: 1,
-    name: "BOXY FIT EMBROIDERED SHIRT",
-    price: 1749,
-    mrp: 3499,
-    discount: 50,
-    image: "/black-hoodie-front-view.jpg",
-    colors: ["Dusky Blue", "White", "Black"],
-    category: "Shirts",
-  },
-  {
-    id: 2,
-    name: "Urban Grey Hoodie",
-    price: 2199,
-    mrp: 2799,
-    discount: 21,
-    image: "/grey-hoodie-modern-design.jpg",
-    colors: ["Grey", "Dark Grey"],
-    category: "Hoodies",
-  },
-  {
-    id: 3,
-    name: "Oversized Charcoal",
-    price: 2399,
-    mrp: 3199,
-    discount: 25,
-    image: "/oversized-charcoal-hoodie-fashion.jpg",
-    colors: ["Charcoal", "Black"],
-    category: "Hoodies",
-  },
-  {
-    id: 4,
-    name: "Vintage Cream Hoodie",
-    price: 2299,
-    mrp: 2899,
-    discount: 21,
-    image: "/cream-vintage-hoodie-luxury.jpg",
-    colors: ["Cream", "Off-White"],
-    category: "Hoodies",
-  },
-  {
-    id: 5,
-    name: "Autumn Edition Hoodie",
-    price: 2499,
-    mrp: 3499,
-    discount: 29,
-    image: "/autumn-hoodie-new-collection-streetwear.jpg",
-    colors: ["Rust", "Bronze"],
-    category: "Limited Edition",
-  },
-  {
-    id: 6,
-    name: "Limited Edition Drop",
-    price: 3299,
-    mrp: 4999,
-    discount: 34,
-    image: "/limited-edition-hoodie-exclusive.jpg",
-    colors: ["Black", "White"],
-    category: "Limited Edition",
-  },
-  {
-    id: 7,
-    name: "Premium Midnight Black",
-    price: 2599,
-    mrp: 3499,
-    discount: 26,
-    image: "/premium-midnight-black-hoodie.jpg",
-    colors: ["Black"],
-    category: "Hoodies",
-  },
-  {
-    id: 8,
-    name: "Sunset Orange Hoodie",
-    price: 2399,
-    mrp: 3199,
-    discount: 25,
-    image: "/sunset-orange-hoodie.jpg",
-    colors: ["Orange", "Rust"],
-    category: "Hoodies",
-  },
-]
+interface Product {
+  _id: string
+  name: string
+  price: number
+  mrp: number
+  images: string[]
+  colors: string[]
+  sizes: string[]
+  category: string
+  inStock: boolean
+  discount: number
+}
 
 export default function SearchPage() {
   const searchParams = useSearchParams()
   const query = searchParams.get("search") || ""
   const [searchTerm, setSearchTerm] = useState(query)
   const [sortBy, setSortBy] = useState("relevance")
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setSearchTerm(query)
   }, [query])
 
+  // Fetch products from MongoDB
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const res = await fetch("/api/admin/products")
+        const data = await res.json()
+        if (data.success && data.products) {
+          setAllProducts(data.products || [])
+        }
+      } catch (error) {
+        console.error("Failed to fetch products:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
+
   const searchResults = useMemo(() => {
     let results = allProducts
+    let exactMatches: Product[] = []
+    let relatedMatches: Product[] = []
 
     if (searchTerm.trim()) {
       const lowerTerm = searchTerm.toLowerCase()
-      results = results.filter(
+      const searchWords = lowerTerm.split(' ').filter(word => word.length > 0)
+      
+      // First, find exact matches
+      exactMatches = results.filter(
         (product) =>
           product.name.toLowerCase().includes(lowerTerm) ||
           product.category.toLowerCase().includes(lowerTerm) ||
           product.colors.some((color) => color.toLowerCase().includes(lowerTerm)),
       )
+
+      // If no exact matches, find related products
+      if (exactMatches.length === 0) {
+        relatedMatches = results.filter((p) => {
+          const nameWords = p.name.toLowerCase().split(' ')
+          const categoryWords = p.category.toLowerCase().split(' ')
+          
+          return searchWords.some(searchWord => 
+            nameWords.some(nameWord => nameWord.includes(searchWord) || searchWord.includes(nameWord)) ||
+            categoryWords.some(catWord => catWord.includes(searchWord) || searchWord.includes(catWord)) ||
+            p.colors.some(color => color.toLowerCase().includes(searchWord))
+          )
+        })
+      }
+
+      results = exactMatches.length > 0 ? exactMatches : relatedMatches
     }
 
     // Sort results
@@ -122,7 +93,35 @@ export default function SearchPage() {
     }
 
     return results
-  }, [searchTerm, sortBy])
+  }, [allProducts, searchTerm, sortBy])
+
+  const isShowingRelated = useMemo(() => {
+    if (!searchTerm || !searchTerm.trim()) return false
+    
+    const lowerTerm = searchTerm.toLowerCase()
+    const hasExactMatch = allProducts.some((p) => 
+      p.name.toLowerCase().includes(lowerTerm) ||
+      p.category.toLowerCase().includes(lowerTerm) ||
+      p.colors.some((color) => color.toLowerCase().includes(lowerTerm))
+    )
+    
+    return !hasExactMatch && searchResults.length > 0
+  }, [searchTerm, allProducts, searchResults])
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+            <p className="text-lg text-gray-600">Loading products...</p>
+          </div>
+        </div>
+        <Footer />
+      </>
+    )
+  }
 
   return (
     <>
@@ -131,12 +130,30 @@ export default function SearchPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
           {/* Search header */}
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Search Results</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              {isShowingRelated ? "Related Products" : "Search Results"}
+            </h1>
             {searchTerm && (
-              <p className="text-gray-600">
-                {searchResults.length} result{searchResults.length !== 1 ? "s" : ""} for{" "}
-                <span className="font-bold">"{searchTerm}"</span>
-              </p>
+              <>
+                <p className="text-gray-600 mb-3">
+                  {searchResults.length > 0 ? (
+                    <>
+                      {searchResults.length} {isShowingRelated ? "related product" : "result"}
+                      {searchResults.length !== 1 ? "s" : ""} for{" "}
+                      <span className="font-bold">"{searchTerm}"</span>
+                    </>
+                  ) : (
+                    <>
+                      No results found for <span className="font-bold">"{searchTerm}"</span>
+                    </>
+                  )}
+                </p>
+                {isShowingRelated && (
+                  <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 inline-block">
+                    No exact matches found. Showing related products instead.
+                  </p>
+                )}
+              </>
             )}
           </div>
 
@@ -172,7 +189,18 @@ export default function SearchPage() {
               {/* Results grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {searchResults.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard 
+                    key={product._id} 
+                    product={{
+                      id: product._id,
+                      name: product.name,
+                      price: product.price,
+                      mrp: product.mrp,
+                      discount: product.discount,
+                      image: product.images[0] || "/placeholder.jpg",
+                      colors: product.colors,
+                    }} 
+                  />
                 ))}
               </div>
             </>

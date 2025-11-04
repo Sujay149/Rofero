@@ -12,6 +12,7 @@ export interface IProduct extends Document {
   colors: string[]
   sizes: string[]
   category: string
+  gender: string
   features: string[]
   fabricCare: string[]
   rating: number
@@ -40,6 +41,7 @@ const ProductSchema = new Schema<IProduct>(
     colors: [{ type: String }],
     sizes: [{ type: String }],
     category: { type: String, default: 'Hoodies' },
+    gender: { type: String, default: 'Unisex' },
     features: [{ type: String }],
     fabricCare: [{ type: String }],
     rating: { type: Number, default: 0 },
